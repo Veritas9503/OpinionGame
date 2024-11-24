@@ -1,13 +1,17 @@
-<h2 align="center">
+<h3 align="center">
 Evolutionary polarization dynamics with individual interaction cost
-</h2>
+</h3>
 <div align="center">
 
 
 
+### How to run:
 
+Update README.md
 
-
+```shell
+gfortran main.f90 -o main
+```
 
 
 

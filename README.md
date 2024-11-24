@@ -1,9 +1,9 @@
-<h3 align="center">
+<h2 align="center">
 Evolutionary polarization dynamics with individual interaction cost
-</h3>
+</h2>
 
 
-### How to run:
+### How to compile:
 
 Update README.md
 
@@ -11,7 +11,10 @@ Update README.md
 gfortran main.f90 -o main
 ```
 
-
+### How to run:
+```shell
+./main [] [] [] []
+```
 
 ### Citation
 If you find this repo useful for your research, please consider citing the paper

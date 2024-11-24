@@ -1,8 +1,6 @@
 <h3 align="center">
 Evolutionary polarization dynamics with individual interaction cost
 </h3>
-<div align="center">
-
 
 
 ### How to run:
@@ -15,7 +13,7 @@ gfortran main.f90 -o main
 
 
 
-# Citation
+### Citation
 If you find this repo useful for your research, please consider citing the paper
 ```
 @article{shu2024social,

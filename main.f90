@@ -15,12 +15,10 @@ program opinion_game_model
     real(8), dimension(sim_time) :: ord_para_total, ord_para_one
     real(8) :: ord_para_0, x_mean, x_var
 
-
     integer, dimension(node_num) :: strategy
 
     character(len=128) :: arg
     character(200) :: filename1
-
 
     real(8) :: rd, i, j
     integer :: kk, k_start, k_end, net, kh
@@ -69,7 +67,6 @@ program opinion_game_model
             call const_nwk ()
 
             ! 初始化net_init次节点状态
-            
             do kh = 1, initials
 
                 ! 初始化coop节点数量, 初始化50%

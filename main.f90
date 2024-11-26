@@ -3,16 +3,22 @@ program opinion_game_model
     use nwk
     implicit none
 
+    ! 参数
     integer, parameter :: initials = 1000, net_init = 1, sim_time = 100000
-    real(8), parameter :: coop_init = 0.5
+    real(8), parameter :: coop_init = 0.5, delta = 2.0
 
-
+    ! 变量
     real(8) :: K, gamma, alpha, beta, epsilon
+
+    ! 中间量数组
     real(8), dimension(node_num): node_x_t_curr, node_x_t_last, node_x_tmp
     real(8), dimension(node_num, node_num): weight_mat
     real(8), dimension(node_num) :: mag
+
+    ! 记录数组
     real(8), dimension(sim_time) :: coop_freq, benefit_coop, benefit_def
-    real(8), dimension(sim_time) :: ord_para_total, ord_para_one
+    real(8), dimension(sim_time) :: ord_para_global
+    real(8), dimension(node_num) :: ord_para_local
     real(8) :: ord_para_0, x_mean, x_var
 
     integer, dimension(node_num) :: strategy
@@ -20,6 +26,7 @@ program opinion_game_model
     character(len=128) :: arg
     character(200) :: filename1
 
+    ! 临时变量
     real(8) :: rd, i, j
     integer :: kk, k_start, k_end, net, kh
     integer :: coop_node, add_coop_node
@@ -108,8 +115,6 @@ program opinion_game_model
                     weight_mat(i, :) = mag(i) ** (-1.0 * beta)
                     weight_mat(i, :) = weight_mat(i, :) / sum(weight_mat(i, :))
                 end do
-
-
                 !-----------------------------------------------------
 
                 do tt = 1, sim_time
@@ -119,13 +124,12 @@ program opinion_game_model
 
                     ! 意见更新
                     do i = 1, node_num
-
                         if (strategy(i) == 0) then
                             node_x_tmp(i) = gamma * node_x_t_curr(i)
                         elseif (strategy(i) == 1) then
                             node_x_tmp(i) = gamma * node_x_t_curr(i)
                             do j = 1, node_num
-                                node_x_tmp(i) = node_x_tmp(i) + K * (weight_mat(i, j) * tanh(alpha * node_x_t_curr(j)))
+                                node_x_tmp(i) = node_x_tmp(i) + K * (adj_mat(i, j) * weight_mat(i, j) * tanh(alpha * node_x_t_curr(j)))
                             end do
                         endif
                     end do
@@ -142,6 +146,12 @@ program opinion_game_model
                     end do
 
                     ! 策略更新
+                    ord_para_local = 0.0
+                    do i = 1, node_num
+                        do j = 1, n_deg(i)
+                            
+                        end do
+                    end do
                     
 
                     

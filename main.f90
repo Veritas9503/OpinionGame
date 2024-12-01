@@ -5,10 +5,10 @@ program opinion_game_model
 
     ! 参数
     integer, parameter :: initials = 1000, net_init = 1, sim_time = 100000
-    real(8), parameter :: coop_init = 0.5, delta = 2.0
+    real(8), parameter :: coop_init = 0.5, sigma = 2.0
 
     ! 变量
-    real(8) :: K, gamma, alpha, beta, epsilon
+    real(8) :: K, gamma, alpha, beta, epsilon, eta
 
     ! 中间量数组
     real(8), dimension(node_num): node_x_t_curr, node_x_t_last, node_x_tmp
@@ -19,6 +19,9 @@ program opinion_game_model
     real(8), dimension(sim_time) :: coop_freq, benefit_coop, benefit_def
     real(8), dimension(sim_time) :: ord_para_global
     real(8), dimension(node_num) :: ord_para_local
+    real(8), dimension(node_num) :: cost_local
+    real(8), dimension(node_num) :: payoff
+    real(8) :: ord_para_neighbor, gamma
     real(8) :: ord_para_0, x_mean, x_var
 
     integer, dimension(node_num) :: strategy
@@ -27,7 +30,7 @@ program opinion_game_model
     character(200) :: filename1
 
     ! 临时变量
-    real(8) :: rd, i, j
+    real(8) :: rd, i, j, delta
     integer :: kk, k_start, k_end, net, kh
     integer :: coop_node, add_coop_node
 
@@ -71,8 +74,8 @@ program opinion_game_model
         cc = 0
         do net = 1, net_init
 
-            call const_nwk ()
-
+            call const_nwk ()        
+            
             ! 初始化net_init次节点状态
             do kh = 1, initials
 
@@ -124,8 +127,10 @@ program opinion_game_model
 
                     ! 意见更新
                     do i = 1, node_num
+                        ! 策略0
                         if (strategy(i) == 0) then
                             node_x_tmp(i) = gamma * node_x_t_curr(i)
+                        ! 策略1
                         elseif (strategy(i) == 1) then
                             node_x_tmp(i) = gamma * node_x_t_curr(i)
                             do j = 1, node_num
@@ -145,12 +150,27 @@ program opinion_game_model
                         weight_mat(i, :) = weight_mat(i, :) / sum(weight_mat(i, :))
                     end do
 
-                    ! 策略更新
+                    ! 计算每个节点的payoff
                     ord_para_local = 0.0
+                    cost_local = 0.0
                     do i = 1, node_num
-                        do j = 1, n_deg(i)
-                            
-                        end do
+                        if (n_deg(i) > 0) then
+                            do j = 1, n_deg(i)
+                                delta = node_x_t_curr(i) - node_x_t_curr(node_id(i, j))
+                                call heaviside(delta, sigma, gamma)
+                                ord_para_neighbor = (1 - 0.5 * abs(delta)) * gamma
+                                ord_para_local(i) = ord_para_local(i) + ord_para_neighbor
+                            end do
+                            ord_para_local(i) = ord_para_local(i) * 1.0 / n_deg(i)
+                        end if
+                        cost_local(i) = abs(node_x_t_curr(i) - node_x_t_last(i))
+                        payoff(i) = ord_para_local(i) - eta * cost_local(i)
+                    end do
+
+                    ! 策略更新
+                    do i = 1, node_num
+                        
+                        call random_number(rd)
                     end do
                     
 
@@ -188,4 +208,29 @@ program opinion_game_model
     close(unit=13)
     close(unit=14)
 
-end program threshold_game_model
+
+contains
+
+    ! 阶跃函数定义
+    subroutine heaviside(x, y, result)
+        real(8), intent(in) :: x, y
+        real(8), intent(out) :: result
+        real(8) :: h1, h2
+
+        if (x + y >= 0) then
+            h1 = 1.0
+        elseif
+            h1 = 0.0
+        end if
+
+        if (x - y >= 0) then
+            h2 = 1
+        elseif
+            h2 = 0
+        end if
+
+        result = h1 - h2
+
+    end subroutine heaviside
+
+end program opinion_game_model

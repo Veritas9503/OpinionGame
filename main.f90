@@ -8,29 +8,33 @@ program opinion_game_model
     real(8), parameter :: coop_init = 0.5, sigma = 2.0
 
     ! 变量
-    real(8) :: K, gamma, alpha, beta, epsilon, eta
+    real(8) :: K, gamma, alpha, beta, epsilon, eta, kappa
 
     ! 中间量数组
     real(8), dimension(node_num): node_x_t_curr, node_x_t_last, node_x_tmp
     real(8), dimension(node_num, node_num): weight_mat
     real(8), dimension(node_num) :: mag
 
-    ! 记录数组
-    real(8), dimension(sim_time) :: coop_freq, benefit_coop, benefit_def
+    ! 临时数组
+    integer, dimension(node_num) :: transition_frac
+    real(8), dimension(sim_time) :: coop_freq, benefit_avg
     real(8), dimension(sim_time) :: ord_para_global
     real(8), dimension(node_num) :: ord_para_local
     real(8), dimension(node_num) :: cost_local
     real(8), dimension(node_num) :: payoff
-    real(8) :: ord_para_neighbor, gamma
+    real(8) :: ord_para_neighbor, gamma, imitate_prob
     real(8) :: ord_para_0, x_mean, x_var
-
     integer, dimension(node_num) :: strategy
+    
+    ! 记录数组
+
+    
 
     character(len=128) :: arg
     character(200) :: filename1
 
     ! 临时变量
-    real(8) :: rd, i, j, delta
+    real(8) :: rd, i, j, delta, p
     integer :: kk, k_start, k_end, net, kh
     integer :: coop_node, add_coop_node
 
@@ -120,10 +124,14 @@ program opinion_game_model
                 end do
                 !-----------------------------------------------------
 
+                ! coop_freq benefit_avg
+                coop_freq = 0.0
+                benefit_avg = 0.0
                 do tt = 1, sim_time
                     ! 假设不记录opinion
                     node_x_t_last = node_x_t_curr
                     node_x_tmp = 0.0
+                    transition_frac = 0
 
                     ! 意见更新
                     do i = 1, node_num
@@ -168,14 +176,40 @@ program opinion_game_model
                     end do
 
                     ! 策略更新
+                    ! DD : 0, CC : 1, CD : 2, DC : 3
                     do i = 1, node_num
                         call random_number(rd)
-                        j = ceiling(rd * n_deg(i)) + 1
+                        j = floor(rd * n_deg(i)) + 1
+                        imitate_prob = 1.0 / (1 + exp(-kappa * (payoff(j) - payoff(i))))
+
+                        call random_number(p)
+                        if (p < imitate_prob) then
+                            if (strategy(i) == 0 .and. strategy(j) == 0) then
+                                transition_frac(i) = 0
+                            elseif (strategy(i) == 1 .and. strategy(j) == 1) then
+                                transition_frac(i) = 1
+                            elseif (strategy(i) == 1 .and. strategy(j) == 1) then
+                                transition_frac(i) = 1
+                            elseif (strategy(i) == 0 .and. strategy(j) == 1) then
+                                transition_frac(i) = 3
+                            end if
+                            strategy(i) = strategy(j)
+                        end if
                     end do
                     
+                    ! 统计合作比例，平均社会效益
+                    coop_freq(tt) = sum(strategy) * 1.0 / node_num
+                    benefit_avg(tt) = sum(payoff) * 1.0 / node_num
 
-                    
+                    ! 计算全局序参量
+                    do i = 1, node_num
+                        ord_para_global(tt) = ord_para_global(tt) + &
+                        (node_x_t_curr(i) - sum(node_x_t_curr)) ** 2
+                    end do
+                    ord_para_global(tt) = 1 - (ord_para_global(tt) * 1.0 / node_num) ** 0.5
                 end do
+
+            end do
 
                
 

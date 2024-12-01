@@ -11,7 +11,7 @@ Update README.md
 gfortran main.f90 -o main
 ```
 
-### How to run:
+### Usage:
 ```shell
 ./main [] [] [] []
 ```

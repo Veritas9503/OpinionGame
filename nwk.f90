@@ -32,16 +32,10 @@ module nwk
 
             do while (add_edge < edge_num)
                 call random_number(rd1)
-                i = ceiling(rd1 * node_num) + 1
-                if (i > node_num) then
-                    i = node_num
-                end if
+                i = floor(rd1 * node_num) + 1
 
                 call random_number(rd2)
-                j = ceiling(rd2 * node_num) + 1
-                if (j > node_num) then
-                    j = node_num
-                end if
+                j = floor(rd2 * node_num) + 1
 
                 if (i /= j .and. adj_mat(i, j) == 0) then
                     adj_mat(i, j) = 1

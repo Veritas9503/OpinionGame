@@ -169,8 +169,8 @@ program opinion_game_model
 
                     ! 策略更新
                     do i = 1, node_num
-                        
                         call random_number(rd)
+                        j = ceiling(rd * n_deg(i)) + 1
                     end do
                     
 

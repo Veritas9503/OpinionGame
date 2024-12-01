@@ -25,9 +25,10 @@ program opinion_game_model
     real(8) :: ord_para_neighbor, gamma, imitate_prob
     real(8) :: ord_para_0, x_mean, x_var
     integer, dimension(node_num) :: strategy
-    
-    ! 记录数组
 
+    ! 记录稳态值和动态值
+    integer, parameter :: record_time = 1000
+    real(8) :: coop_freq_record, benefit_avg_record, ord_para_global_record
     
 
     character(len=128) :: arg
@@ -74,6 +75,10 @@ program opinion_game_model
         node_x_t_last = 0.0
         weight_mat = 0.0
         strategy = 0
+
+        coop_freq_record = 0.0
+        benefit_avg_record = 0.0
+        ord_para_global_record = 0.0
 
         cc = 0
         do net = 1, net_init
@@ -209,27 +214,20 @@ program opinion_game_model
                     ord_para_global(tt) = 1 - (ord_para_global(tt) * 1.0 / node_num) ** 0.5
                 end do
 
+                ! 记录稳态数据
+                coop_freq_record = coop_freq_record + sum(coop_freq(sim_time - record_time:sim_time)) & 
+                * 1.0 / record_time
+                benefit_avg_record = benefit_avg_record + sum(benefit_avg(sim_time - record_time:sim_time)) &
+                * 1.0 / record_time
+                ord_para_global_record = ord_para_global_record + &
+                sum(ord_para_global(sim_time - record_time:sim_time)) * 1.0 / record_time
             end do
 
-               
-
-        ! 求均值
-        do m = 1, net_init * initials
-            sus_avg = sus_avg + infect_final(m)
         end do
 
-        sus_avg = sus_avg / real(net_init * initials) 
-
-        ! 求方差
-        do m = 1, net_init * initials
-            sus_var = sus_var + (infect_final(m)-sus_avg)**2
-        end do
-        sus_var = sus_var / real(net_init * initials)
-
-        ! 计算磁化率
-        susceptibility = real(node_num) * sus_var/sus_avg
-
-        print *, rr, sus_avg, sus_var, (sus_var**2)/(sus_avg**2), susceptibility
+        coop_freq_record = coop_freq_record * 1.0 / (net_init * initials)    
+        benefit_avg_record = benefit_avg_record * 1.0 / (net_init * initials)
+        
 
         do m = 1, sim_time
             write(13, *) m, avg_deg, alpha, beta, boy_init, avg_infect_f(m), avg_infect_f_normal(m), avg_infect_f_im(m)

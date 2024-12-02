@@ -29,7 +29,7 @@ program opinion_game_model
     ! 记录稳态值和动态值
     integer, parameter :: record_time = 1000
     real(8) :: coop_freq_record, benefit_avg_record, ord_para_global_record
-    
+    real(8), dimension(sim_time) :: coop_freq_dyn, benefit_avg_dyn, ord_para_global_dyn
 
     character(len=128) :: arg
     character(200) :: filename1
@@ -79,6 +79,10 @@ program opinion_game_model
         coop_freq_record = 0.0
         benefit_avg_record = 0.0
         ord_para_global_record = 0.0
+
+        coop_freq_dyn = 0.0
+        benefit_avg_dyn = 0.0
+        ord_para_global_dyn = 0.0
 
         cc = 0
         do net = 1, net_init
@@ -212,21 +216,28 @@ program opinion_game_model
                         (node_x_t_curr(i) - sum(node_x_t_curr)) ** 2
                     end do
                     ord_para_global(tt) = 1 - (ord_para_global(tt) * 1.0 / node_num) ** 0.5
+
+                    ! 记录动态数据
+                    coop_freq_dyn(tt) = coop_freq_dyn(tt) + coop_freq(tt) / (net_init * initials)
+                    benefit_avg_dyn(tt) = benefit_avg_dyn(tt) + benefit_avg(tt) / (net_init * initials)
+                    ord_para_global_dyn(tt) = ord_para_global_dyn(tt) + ord_para_global(tt) / (net_init * initials)
                 end do
 
                 ! 记录稳态数据
-                coop_freq_record = coop_freq_record + sum(coop_freq(sim_time - record_time:sim_time)) & 
+                coop_freq_record = coop_freq_record + sum(coop_freq(sim_time-record_time:sim_time)) & 
                 * 1.0 / record_time
-                benefit_avg_record = benefit_avg_record + sum(benefit_avg(sim_time - record_time:sim_time)) &
+                benefit_avg_record = benefit_avg_record + sum(benefit_avg(sim_time-record_time:sim_time)) &
                 * 1.0 / record_time
                 ord_para_global_record = ord_para_global_record + &
-                sum(ord_para_global(sim_time - record_time:sim_time)) * 1.0 / record_time
+                sum(ord_para_global(sim_time-record_time:sim_time)) * 1.0 / record_time
             end do
 
         end do
 
+        ! 稳态数据
         coop_freq_record = coop_freq_record * 1.0 / (net_init * initials)    
         benefit_avg_record = benefit_avg_record * 1.0 / (net_init * initials)
+        ord_para_global_record  = ord_para_global_record * 1.0 / (net_init * initials)
         
 
         do m = 1, sim_time

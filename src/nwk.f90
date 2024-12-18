@@ -1,6 +1,7 @@
+! 生成er网络
 module nwk
     implicit none
-
+    
     integer, parameter :: node_num = 1000
     real(8) :: avg_deg
     integer :: edge_num

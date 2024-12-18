@@ -273,7 +273,6 @@ program opinion_game_model
     close(unit=13)
     close(unit=14)
 
-
 contains
 
     ! 阶跃函数定义

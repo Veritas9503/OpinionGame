@@ -16,7 +16,7 @@ program opinion_game_model
     real(8), dimension(node_num) :: mag
 
     ! 临时数组
-    integer, dimension(node_num) :: transition_frac
+    integer, dimension(sim_time) :: transition_frac_dd, transition_frac_cc, transition_frac_cd, transition_frac_dc
     real(8), dimension(sim_time) :: coop_freq, benefit_avg
     real(8), dimension(sim_time) :: ord_para_global
     real(8), dimension(node_num) :: ord_para_local
@@ -30,6 +30,7 @@ program opinion_game_model
     integer, parameter :: record_time = 1000
     real(8) :: coop_freq_record, benefit_avg_record, ord_para_global_record
     real(8), dimension(sim_time) :: coop_freq_dyn, benefit_avg_dyn, ord_para_global_dyn
+    real(8), dimension(sim_time) :: transition_frac_dd_dyn, transition_frac_cc_dyn, transition_frac_cd_dyn, transition_frac_dc_dyn
 
     character(len=128) :: arg
     character(200) :: filename1
@@ -84,6 +85,11 @@ program opinion_game_model
         benefit_avg_dyn = 0.0
         ord_para_global_dyn = 0.0
 
+        transition_frac_dd_dyn = 0.0
+        transition_frac_cc_dyn = 0.0
+        transition_frac_cd_dyn = 0.0
+        transition_frac_dc_dyn = 0.0
+
         cc = 0
         do net = 1, net_init
 
@@ -114,10 +120,7 @@ program opinion_game_model
                 ord_para_0 = 0.0
                 x_mean = 0.0
                 x_var = 0.0
-                do i = 1, node_num
-                    x_mean = x_mean + node_x_t_curr(i)
-                end do
-                x_mean = x_mean * 1.0 / node_num
+                x_mean = sum(node_x_t_curr) * 1.0 / node_num
                 do i = 1, node_num
                     x_var = x_var + (node_x_t_curr(i) - x_mean) ** 2
                 end do
@@ -133,9 +136,15 @@ program opinion_game_model
                 end do
                 !-----------------------------------------------------
 
-                ! coop_freq benefit_avg
+                ! coop_freq, benefit_avg
                 coop_freq = 0.0
                 benefit_avg = 0.0
+
+                transition_frac_dd = 0.0
+                transition_frac_cc = 0.0
+                transition_frac_cd = 0.0
+                transition_frac_dc = 0.0
+
                 do tt = 1, sim_time
                     ! 假设不记录opinion
                     node_x_t_last = node_x_t_curr
@@ -192,17 +201,25 @@ program opinion_game_model
                         imitate_prob = 1.0 / (1 + exp(-kappa * (payoff(j) - payoff(i))))
 
                         call random_number(p)
-                        if (p < imitate_prob) then
+                        ! 如果模仿
+                        if (p <= imitate_prob) then
                             if (strategy(i) == 0 .and. strategy(j) == 0) then
-                                transition_frac(i) = 0
+                                transition_frac_dd(tt) = transition_frac_dd(tt) + 1.0 / node_num
                             elseif (strategy(i) == 1 .and. strategy(j) == 1) then
-                                transition_frac(i) = 1
-                            elseif (strategy(i) == 1 .and. strategy(j) == 1) then
-                                transition_frac(i) = 1
+                                transition_frac_cc(tt) = transition_frac_cc(tt) + 1.0 / node_num
+                            elseif (strategy(i) == 1 .and. strategy(j) == 0) then
+                                transition_frac_cd(tt) = transition_frac_cd(tt) + 1.0 / node_num
                             elseif (strategy(i) == 0 .and. strategy(j) == 1) then
-                                transition_frac(i) = 3
+                                transition_frac_dc(tt) = transition_frac_dc(tt) + 1.0 / node_num
                             end if
                             strategy(i) = strategy(j)
+                        ! 如果不模仿
+                        else
+                            if (strategy(i) == 0) then 
+                                transition_frac_dd(tt) = transition_frac_dd(tt) + 1.0 / node_num
+                            elseif (strategy(i) == 1) then
+                                transition_frac_cc(tt) = transition_frac_cc(tt) + 1.0 / node_num
+                            end if
                         end if
                     end do
                     
@@ -213,7 +230,7 @@ program opinion_game_model
                     ! 计算全局序参量
                     do i = 1, node_num
                         ord_para_global(tt) = ord_para_global(tt) + &
-                        (node_x_t_curr(i) - sum(node_x_t_curr)) ** 2
+                        (node_x_t_curr(i) - sum(node_x_t_curr) * 1.0 / node_num) ** 2
                     end do
                     ord_para_global(tt) = 1 - (ord_para_global(tt) * 1.0 / node_num) ** 0.5
 
@@ -221,6 +238,11 @@ program opinion_game_model
                     coop_freq_dyn(tt) = coop_freq_dyn(tt) + coop_freq(tt) / (net_init * initials)
                     benefit_avg_dyn(tt) = benefit_avg_dyn(tt) + benefit_avg(tt) / (net_init * initials)
                     ord_para_global_dyn(tt) = ord_para_global_dyn(tt) + ord_para_global(tt) / (net_init * initials)
+
+                    transition_frac_dd_dyn(tt) = transition_frac_dd_dyn(tt) + transition_frac_dd(tt) / (net_init * initials)
+                    transition_frac_cc_dyn(tt) = transition_frac_cc_dyn(tt) + transition_frac_cc(tt) / (net_init * initials)
+                    transition_frac_cd_dyn(tt) = transition_frac_cd_dyn(tt) + transition_frac_cd(tt) / (net_init * initials)
+                    transition_frac_dc_dyn(tt) = transition_frac_dc_dyn(tt) + transition_frac_dc(tt) / (net_init * initials)
                 end do
 
                 ! 记录稳态数据
@@ -239,7 +261,6 @@ program opinion_game_model
         benefit_avg_record = benefit_avg_record * 1.0 / (net_init * initials)
         ord_para_global_record  = ord_para_global_record * 1.0 / (net_init * initials)
         
-
         do m = 1, sim_time
             write(13, *) m, avg_deg, alpha, beta, boy_init, avg_infect_f(m), avg_infect_f_normal(m), avg_infect_f_im(m)
         end do

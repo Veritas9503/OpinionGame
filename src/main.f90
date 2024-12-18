@@ -67,7 +67,6 @@ program opinion_game_model
     do kk = k_start, k_end
 
         print *, kk
-
         K = kk * 1.0 / 100.0
 
         ! initials

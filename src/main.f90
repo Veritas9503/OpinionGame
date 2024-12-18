@@ -262,10 +262,11 @@ program opinion_game_model
         ord_para_global_record  = ord_para_global_record * 1.0 / (net_init * initials)
         
         do m = 1, sim_time
-            write(13, *) m, avg_deg, alpha, beta, boy_init, avg_infect_f(m), avg_infect_f_normal(m), avg_infect_f_im(m)
+            write(13, *) m, coop_freq_dyn(m), benefit_avg_dyn(m), ord_para_global_dyn(m), &
+            transition_frac_dd_dyn(m), transition_frac_cc_dyn(m), transition_frac_cd_dyn(m), transition_frac_dc_dyn(m)
         end do
 
-        write(14, *) avg_deg, alpha, beta, boy_init, susceptibility, (sus_var**2)/(sus_avg**2)
+        write(14, *) coop_freq_record, benefit_avg_record, ord_para_global_record
 
     end do
 
